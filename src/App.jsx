@@ -5,7 +5,7 @@ import { ThemeProvider } from "./context/ThemeProvider";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
+import ProductDetails from "./pages/ProductDetails";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Checkout from "./pages/Checkout";
@@ -20,6 +20,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/contact" element={<ContactForm />} />
         </Routes>

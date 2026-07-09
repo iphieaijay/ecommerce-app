@@ -1,11 +1,18 @@
 import { motion } from "motion/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye } from "lucide-react";
 
 const FALLBACK_IMAGE = "https://picsum.photos/400/500?grayscale";
 
 export default function ProductCard({ product, index = 0 }) {
   const [imageSrc, setImageSrc] = useState(product.image || FALLBACK_IMAGE);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const handleViewDetails = () => {
+  navigate(`/product/${product.id}`);
+};
 
   return (
     <motion.article
@@ -45,34 +52,26 @@ export default function ProductCard({ product, index = 0 }) {
             loading ? "opacity-0" : "opacity-100"
           }`}
         />
-      </div>
 
-      {/* Product Details */}
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="line-clamp-2 text-lg font-semibold text-brand-950 dark:text-brand-50">
-          {product.name}
-        </h3>
-
-        <p className="mt-2 line-clamp-3 text-sm leading-6 text-brand-600 dark:text-brand-400">
-          {product.description}
-        </p>
-
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-2xl font-bold text-brand-950 dark:text-brand-50">
-            ${product.price.toFixed(2)}
-          </span>
-
-          {product.tag && (
-            <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700 dark:bg-brand-800 dark:text-brand-300">
-              {product.tag}
+        {/* Center Hover Overlay */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-brand-950/0 opacity-0 transition-all duration-300 group-hover:bg-brand-950/50 group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            aria-label={`View details for ${product.name}`}
+            className="flex translate-y-3 flex-col items-center gap-2 text-white opacity-0 transition-all duration-300 delay-75 group-hover:translate-y-0 group-hover:opacity-100"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-brand-950 shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 hover:bg-white">
+              <Eye className="h-6 w-6" strokeWidth={2} />
             </span>
-          )}
+            <span className="text-sm font-semibold tracking-wide">
+              View Details
+            </span>
+          </button>
         </div>
-
-        <button className="mt-6 w-full rounded-xl bg-brand-950 py-3 text-sm font-semibold text-white transition hover:bg-brand-800 dark:bg-brand-700 dark:hover:bg-brand-600">
-          Add to Cart
-        </button>
       </div>
+
+     
     </motion.article>
   );
 }
