@@ -2,24 +2,94 @@ import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import ProductCard from "../components/ProductCard";
 import Pagination from "../components/Pagination";
+import CategorySidebar from "../components/CategorySidebar";
+import SearchBar from "../components/SearchBar";
 
 const PRODUCTS_PER_PAGE = 12;
+
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [products, setProducts]=useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("https://dummyjson.com/products?limit=20")
-        .then(res => res.json())
-        .then(data => setProducts(data.products));
-}, []);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch("https://dummyjson.com/products?limit=100"),
+          fetch("https://dummyjson.com/products/categories"),
+        ]);
 
-  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+        if (!productsRes.ok || !categoriesRes.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const productsData = await productsRes.json();
+        const categoriesData = await categoriesRes.json();
+
+        // dummyjson's categories endpoint can return either an array of
+        // strings or an array of {slug, name, url} objects depending on
+        // API version — normalize both to {slug, name}.
+        const normalizedCategories = categoriesData.map((cat) =>
+          typeof cat === "string"
+            ? { slug: cat, name: cat.replace(/-/g, " ") }
+            : { slug: cat.slug, name: cat.name }
+        );
+
+        setProducts(productsData.products);
+        setCategories(normalizedCategories);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Something went wrong loading products. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
+
+  const filteredProducts = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    return products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "all" || product.category === selectedCategory;
+
+      const matchesSearch =
+        term === "" ||
+        product.title?.toLowerCase().includes(term) ||
+        product.description?.toLowerCase().includes(term) ||
+        product.brand?.toLowerCase().includes(term);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, searchTerm, selectedCategory]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
+  );
 
   const visibleProducts = useMemo(() => {
     const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    return products.slice(start, start + PRODUCTS_PER_PAGE);
-  }, [currentPage, products]);
+    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [currentPage, filteredProducts]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -64,36 +134,75 @@ export default function Home() {
       </motion.section>
 
       <section className="px-6 pb-20">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPage}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="mx-auto grid max-w-6xl grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4"
-          >
-            {visibleProducts.map((product, index) => (
-              <ProductCard key={product.name} 
-              product={{
-                id: product.id,
-                name: product.title,
-                description: product.description,
-                price: product.price,
-                image: product.thumbnail,
-                tag: product.brand
-            }}
-              index={index} />
-              
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row">
+          <CategorySidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+          <div className="flex-1">
+            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <SearchBar value={searchTerm} onChange={setSearchTerm} />
+              <p className="whitespace-nowrap text-sm text-brand-500 dark:text-brand-400">
+                {filteredProducts.length} result
+                {filteredProducts.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+
+            {error && (
+              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                {error}
+              </p>
+            )}
+
+            {!error && loading && (
+              <p className="py-16 text-center text-brand-500 dark:text-brand-400">
+                Loading products...
+              </p>
+            )}
+
+            {!error && !loading && visibleProducts.length === 0 && (
+              <p className="py-16 text-center text-brand-500 dark:text-brand-400">
+                No products match your search.
+              </p>
+            )}
+
+            {!error && !loading && visibleProducts.length > 0 && (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${currentPage}-${selectedCategory}-${searchTerm}`}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="grid grid-cols-2 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {visibleProducts.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={{
+                        id: product.id,
+                        name: product.title,
+                        description: product.description,
+                        price: product.price,
+                        image: product.thumbnail,
+                        tag: product.brand,
+                      }}
+                      index={index}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
       </section>
     </>
   );
