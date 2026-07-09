@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* Tailwind v4 defaults `dark:` to the OS media query. This re-enables
+   class-based dark mode so ThemeContext.jsx (which toggles `.dark` on
+   <html>) controls it instead. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand scale anchored on the two requested colors:
+     --color-brand-50  -> #faf5ff (light theme body / light text-on-dark)
+     --color-brand-950 -> #3b0764 (dark theme body, navbar, footer) */
+  --color-brand-50: #faf5ff;
+  --color-brand-100: #f3e8ff;
+  --color-brand-200: #e9d5ff;
+  --color-brand-300: #d8b4fe;
+  --color-brand-400: #c084fc;
+  --color-brand-500: #a855f7;
+  --color-brand-600: #9333ea;
+  --color-brand-700: #7e22ce;
+  --color-brand-800: #6b21a8;
+  --color-brand-900: #581c87;
+  --color-brand-950: #3b0764;
+
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-brand: 0 10px 30px -10px rgba(59, 7, 100, 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
