@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import {
@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 
 import useProduct from "../hooks/useProduct";
+import { useCart } from "../context/CartContext";
 
 const FALLBACK_IMAGE = "https://picsum.photos/800/800?grayscale";
 
 export default function ProductDetails() {
   const { id } = useParams();
+  const { addToCart } = useCart();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [mainImageSrc, setMainImageSrc] = useState(null);
@@ -28,6 +30,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [openSection, setOpenSection] = useState("description");
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const addedTimeoutRef = useRef(null);
 
   const { product, loading, error } = useProduct(id);
 
@@ -37,6 +41,7 @@ export default function ProductDetails() {
     setSelectedColor(0);
     setSelectedSize(null);
     setQuantity(1);
+    setJustAdded(false);
   }, [id]);
 
   useEffect(() => {
@@ -48,6 +53,10 @@ export default function ProductDetails() {
       );
     }
   }, [product, selectedImage]);
+
+  useEffect(() => {
+    return () => window.clearTimeout(addedTimeoutRef.current);
+  }, []);
 
   if (loading) {
     return (
@@ -95,6 +104,20 @@ export default function ProductDetails() {
   const colors = product.colors || [];
   const sizes = product.sizes || [];
   const details = product.details || [];
+
+  const handleAddToCart = () => {
+    if (sizes.length > 0 && !selectedSize) return;
+
+    addToCart(product, {
+      quantity,
+      color: colors[selectedColor]?.name,
+      size: selectedSize,
+    });
+
+    setJustAdded(true);
+    window.clearTimeout(addedTimeoutRef.current);
+    addedTimeoutRef.current = window.setTimeout(() => setJustAdded(false), 2000);
+  };
 
   // Use the product's actual image(s) if provided, falling back to a
   // single repeated placeholder so the gallery still has four thumbnails.
@@ -313,10 +336,19 @@ export default function ProductDetails() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="button"
+                onClick={handleAddToCart}
                 disabled={sizes.length > 0 && !selectedSize}
-                className="flex-1 rounded-xl bg-purple-950 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-purple-950"
+                className={`flex-1 rounded-xl py-3.5 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                  justAdded
+                    ? "bg-emerald-600 hover:bg-emerald-600"
+                    : "bg-purple-950 hover:bg-fuchsia-500 disabled:hover:bg-purple-950"
+                }`}
               >
-                {sizes.length > 0 && !selectedSize ? "Select a size" : "Add to cart"}
+                {sizes.length > 0 && !selectedSize
+                  ? "Select a size"
+                  : justAdded
+                  ? "Added to cart ✓"
+                  : "Add to cart"}
               </motion.button>
 
               <button

@@ -10,6 +10,10 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Checkout from "./pages/Checkout";
 import ContactForm from "./pages/ContactForm";
+import Cart from "./pages/Cart";
+import OrderConfirmation from "./pages/OrderConfirmation";
+
+
 
 function AppContent() {
   return (
@@ -21,7 +25,9 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/contact" element={<ContactForm />} />
         </Routes>
       </main>
@@ -36,5 +42,7 @@ export default function App() {
     <ThemeProvider>
       <AppContent />
     </ThemeProvider>
+
   );
 }
+

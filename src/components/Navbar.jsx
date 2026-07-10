@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, Menu } from "lucide-react";
+import {Search, Menu } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import CartIcon from "./CartIcon";
 
 const links = [
   { name: "Home", path: "/" },
@@ -73,15 +74,15 @@ export default function Navbar() {
           </button>
 
           {/* Cart -> Checkout */}
-          <motion.button
+          {/* <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate("/checkout")}
             className="relative text-brand-200 transition-colors hover:text-brand-50"
             aria-label="Shopping Cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
+          > */}
+           <CartIcon/>
 
-            <motion.span
+            {/* <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{
@@ -92,8 +93,8 @@ export default function Navbar() {
               className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-fuchsia-400 text-[10px] font-bold text-brand-950"
             >
               3
-            </motion.span>
-          </motion.button>
+            </motion.span> */}
+          {/* </motion.button> */}
 
           {/* Auth Links */}
           <motion.div
